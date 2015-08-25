@@ -1,4 +1,5 @@
 <?php
+
 /**
  * File containing the Content Search handler class
  *
@@ -42,8 +43,8 @@ use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
  * content objects based on criteria, which could not be converted in to
  * database statements.
  */
-class Handler implements SearchHandlerInterface
-{
+class Handler implements SearchHandlerInterface {
+
     /**
      * Content locator gateway.
      *
@@ -64,8 +65,7 @@ class Handler implements SearchHandlerInterface
      * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway $gateway
      * @param \eZ\Publish\Core\Persistence\Legacy\Content\Mapper $contentMapper
      */
-    public function __construct( Gateway $gateway, ContentMapper $contentMapper )
-    {
+    public function __construct(Gateway $gateway, ContentMapper $contentMapper) {
         $this->gateway = $gateway;
         $this->contentMapper = $contentMapper;
     }
@@ -83,29 +83,26 @@ class Handler implements SearchHandlerInterface
      *
      * @return \eZ\Publish\API\Repository\Values\Content\Search\SearchResult
      */
-    public function findContent( Query $query, array $fieldFilters = array() )
-    {
-        $start = microtime( true );
-        $query->filter = $query->filter ?: new Criterion\MatchAll();
-        $query->query = $query->query ?: new Criterion\MatchAll();
+    public function findContent(Query $query, array $fieldFilters = array()) {
+        $start = microtime(true);
+        $query->filter = $query->filter ? : new Criterion\MatchAll();
+        $query->query = $query->query ? : new Criterion\MatchAll();
 
-        if ( count( $query->facetBuilders ) )
-        {
-            throw new NotImplementedException( "Facets are not supported by the legacy search engine." );
+        if (count($query->facetBuilders)) {
+            throw new NotImplementedException("Facets are not supported by the legacy search engine.");
         }
 
         // The legacy search does not know about scores, so that we just
         // combine the query with the filter
-        $filter = new Criterion\LogicalAnd( array( $query->query, $query->filter ) );
+        $filter = new Criterion\LogicalAnd(array($query->query, $query->filter));
 
-        $data = $this->gateway->find( $filter, $query->offset, $query->limit, $query->sortClauses, null );
+        $data = $this->gateway->find($filter, $query->offset, $query->limit, $query->sortClauses, null, $query->performCount);
 
         $result = new SearchResult();
-        $result->time = microtime( true ) - $start;
+        $result->time = microtime(true) - $start;
         $result->totalCount = $data['count'];
 
-        foreach ( $this->contentMapper->extractContentInfoFromRows( $data['rows'], '', 'main_tree_' ) as $contentInfo )
-        {
+        foreach ($this->contentMapper->extractContentInfoFromRows($data['rows'], '', 'main_tree_') as $contentInfo) {
             $searchHit = new SearchHit();
             $searchHit->valueObject = $contentInfo;
 
@@ -129,21 +126,21 @@ class Handler implements SearchHandlerInterface
      *
      * @return \eZ\Publish\SPI\Persistence\Content\ContentInfo
      */
-    public function findSingle( Criterion $filter, array $fieldFilters = array() )
-    {
+    public function findSingle(Criterion $filter, array $fieldFilters = array()) {
         $searchQuery = new Query();
         $searchQuery->filter = $filter;
-        $searchQuery->query  = new Criterion\MatchAll();
+        $searchQuery->query = new Criterion\MatchAll();
         $searchQuery->offset = 0;
-        $searchQuery->limit  = 1;
-        $result = $this->findContent( $searchQuery, $fieldFilters );
+        $searchQuery->limit = 2; // Because we optimize away the count query below
+        $searchQuery->performCount = true;
+        $result = $this->findContent($searchQuery, $fieldFilters);
 
-        if ( !$result->totalCount )
-            throw new NotFoundException( 'Content', "findSingle() found no content for given \$criterion" );
-        else if ( $result->totalCount > 1 )
-            throw new InvalidArgumentException( "totalCount", "findSingle() found more then one item for given \$criterion" );
+        if (empty($result->searchHits))
+            throw new NotFoundException('Content', "findSingle() found no content for given \$criterion");
+        else if (isset($result->searchHits[1]))
+            throw new InvalidArgumentException("totalCount", "findSingle() found more then one item for given \$criterion");
 
-        $first = reset( $result->searchHits );
+        $first = reset($result->searchHits);
         return $first->valueObject;
     }
 
@@ -155,9 +152,8 @@ class Handler implements SearchHandlerInterface
      * @param int $limit
      * @param \eZ\Publish\API\Repository\Values\Content\Query\Criterion $filter
      */
-    public function suggest( $prefix, $fieldPaths = array(), $limit = 10, Criterion $filter = null )
-    {
-        throw new NotImplementedException( "Suggestions are not supported by legacy search engine." );
+    public function suggest($prefix, $fieldPaths = array(), $limit = 10, Criterion $filter = null) {
+        throw new NotImplementedException("Suggestions are not supported by legacy search engine.");
     }
 
     /**
@@ -167,9 +163,8 @@ class Handler implements SearchHandlerInterface
      *
      * @return void
      */
-    public function indexContent( Content $content )
-    {
-        throw new \Exception( "Not implemented yet." );
+    public function indexContent(Content $content) {
+        throw new \Exception("Not implemented yet.");
     }
 
     /**
@@ -180,9 +175,8 @@ class Handler implements SearchHandlerInterface
      *
      * @return void
      */
-    public function deleteContent( $contentId, $versionId = null )
-    {
-        throw new \Exception( "Not implemented yet." );
+    public function deleteContent($contentId, $versionId = null) {
+        throw new \Exception("Not implemented yet.");
     }
 
     /**
@@ -190,8 +184,8 @@ class Handler implements SearchHandlerInterface
      *
      * @param int|string $locationId
      */
-    public function deleteLocation( $locationId )
-    {
+    public function deleteLocation($locationId) {
         // Not implemented in Legacy Storage Engine
     }
+
 }

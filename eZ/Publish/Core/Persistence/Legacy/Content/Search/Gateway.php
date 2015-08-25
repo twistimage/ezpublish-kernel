@@ -30,6 +30,6 @@ abstract class Gateway
      *
      * @return mixed[][]
      */
-    abstract public function find( Criterion $criterion, $offset = 0, $limit = null, array $sort = null, array $translations = null );
+    abstract public function find( Criterion $criterion, $offset = 0, $limit = null, array $sort = null, array $translations = null, $doCount = true );
 }
 

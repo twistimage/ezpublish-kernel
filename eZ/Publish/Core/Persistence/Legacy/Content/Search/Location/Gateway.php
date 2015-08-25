@@ -26,6 +26,6 @@ abstract class Gateway
      * @param \eZ\Publish\API\Repository\Values\Content\Query\SortClause[] $sortClauses
      *
      * @return mixed[][]
-     */
-    abstract public function find( Criterion $criterion, $offset = 0, $limit = null, array $sortClauses = null );
+     */    
+    abstract public function find( Criterion $criterion, $offset = 0, $limit = null, array $sortClauses = null, $doCount = true );
 }
