@@ -8,9 +8,10 @@
  * @version //autogentag//
  */
 
-use eZ\Publish\Core\Persistence\Legacy\Content\Type\Gateway as ContentTypeGateway;
+
 namespace eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway;
 
+use eZ\Publish\Core\Persistence\Legacy\Content\Type\Gateway as ContentTypeGateway;
 use eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriteriaConverter;
 use eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\SortClauseConverter;
 use eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway;
